@@ -1,51 +1,73 @@
 import { useState } from "react";
-import {
-  Container,
-  Typography,
-  Button,
-  Box,
-  Card,
-  CardContent,
-  Stack,
-} from "@mui/material";
-import { Add as AddIcon, CheckCircle as CheckIcon } from "@mui/icons-material";
+import { Container, Box } from "@mui/material";
+import "./App.css";
+import TaskList from "./components/TaskList";
+import type { Task, TaskFilter } from "./types/Task";
+
+const mockTasks: Task[] = [
+  {
+    id: 1,
+    name: "Comprar pan",
+    dueDate: "2024-12-20T00:00:00Z",
+    priority: 4,
+    createdAt: "2024-12-01T10:00:00Z",
+    updatedAt: "2024-12-01T10:00:00Z",
+    isOverdue: false,
+  },
+  {
+    id: 2,
+    name: "Hacer ejercicio",
+    dueDate: "2024-11-15T00:00:00Z",
+    priority: 5,
+    createdAt: "2024-11-01T09:00:00Z",
+    updatedAt: "2024-11-01T09:00:00Z",
+    isOverdue: true,
+  },
+  {
+    id: 3,
+    name: "Hacer la cena",
+    dueDate: "2024-12-25T00:00:00Z",
+    priority: 2,
+    createdAt: "2024-12-01T14:00:00Z",
+    updatedAt: "2024-12-01T14:00:00Z",
+    isOverdue: false,
+  },
+];
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [filter, setFilter] = useState<TaskFilter>("all");
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [loading] = useState(false);
+
+  const handleAddTask = () => {
+    setEditingTask(null);
+    setFormOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setFormOpen(true);
+  };
+
+  const handleDeleteTask = (id: number) => {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box textAlign="center" mb={4}>
-        <Typography variant="h4" component="h1" gutterBottom color="primary">
-          TODO App Frontend
-        </Typography>
+      <Box>
+        <TaskList
+          tasks={tasks}
+          loading={loading}
+          filter={filter}
+          onFilterChange={setFilter}
+          onAddTask={handleAddTask}
+          onEditTask={handleEditTask}
+          onDeleteTask={handleDeleteTask}
+        />
       </Box>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Using mui for testing
-          </Typography>
-
-          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setCount((count) => count + 1)}
-            >
-              Vite Count: {count}
-            </Button>
-
-            <Button
-              variant="outlined"
-              startIcon={<CheckIcon />}
-              color="success"
-            >
-              Outlined
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
     </Container>
   );
 }
