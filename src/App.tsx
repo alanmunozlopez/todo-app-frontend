@@ -1,35 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import {
+  Container,
+  Typography,
+  Button,
+  Box,
+  Card,
+  CardContent,
+  Stack,
+} from "@mui/material";
+import { Add as AddIcon, CheckCircle as CheckIcon } from "@mui/icons-material";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Box textAlign="center" mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom color="primary">
+          TODO App Frontend
+        </Typography>
+      </Box>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Using mui for testing
+          </Typography>
+
+          <Stack direction="row" spacing={2} justifyContent="center" mb={2}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCount((count) => count + 1)}
+            >
+              Vite Count: {count}
+            </Button>
+
+            <Button
+              variant="outlined"
+              startIcon={<CheckIcon />}
+              color="success"
+            >
+              Outlined
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Container>
+  );
 }
 
-export default App
+export default App;
