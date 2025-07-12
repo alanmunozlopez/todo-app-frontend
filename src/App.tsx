@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Container, Box } from "@mui/material";
+import { DateTime } from "luxon";
 import "./App.css";
 import TaskList from "./components/TaskList";
-import type { Task, TaskFilter } from "./types/Task";
+import TaskForm from "./components/TaskForm";
+import type { Task, TaskFilter, TaskFormData } from "./types/Task";
 
 const mockTasks: Task[] = [
   {
@@ -51,6 +53,37 @@ function App() {
     setFormOpen(true);
   };
 
+  const handleFormSubmit = (taskData: TaskFormData) => {
+    if (editingTask) {
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === editingTask.id
+            ? {
+                ...task,
+                name: taskData.name,
+                dueDate: DateTime.fromISO(taskData.dueDate).toISO() || taskData.dueDate,
+                priority: taskData.priority,
+                updatedAt: DateTime.now().toISO(),
+              }
+            : task
+        )
+      );
+    } else {
+      const newTask: Task = {
+        id: Math.max(...tasks.map((t) => t.id)) + 1,
+        name: taskData.name,
+        dueDate: DateTime.fromISO(taskData.dueDate).toISO() || taskData.dueDate,
+        priority: taskData.priority,
+        createdAt: DateTime.now().toISO(),
+        updatedAt: DateTime.now().toISO(),
+        isOverdue: DateTime.fromISO(taskData.dueDate) < DateTime.now(),
+      };
+      setTasks((prev) => [...prev, newTask]);
+    }
+    setFormOpen(false);
+    setEditingTask(null);
+  };
+
   const handleDeleteTask = (id: number) => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
   };
@@ -66,6 +99,15 @@ function App() {
           onAddTask={handleAddTask}
           onEditTask={handleEditTask}
           onDeleteTask={handleDeleteTask}
+        />
+        <TaskForm
+          open={formOpen}
+          onClose={() => {
+            setFormOpen(false);
+            setEditingTask(null);
+          }}
+          onSubmit={handleFormSubmit}
+          editingTask={editingTask}
         />
       </Box>
     </Container>

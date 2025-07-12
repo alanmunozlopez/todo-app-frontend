@@ -26,6 +26,7 @@ export default function TaskList({
   loading,
   filter,
   onFilterChange,
+  onAddTask,
   onEditTask,
   onDeleteTask,
 }: TaskListProps) {
@@ -53,7 +54,7 @@ export default function TaskList({
         <Typography variant="h4" component="h1">
           My Tasks
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={onAddTask}>
           Add Task
         </Button>
       </Stack>

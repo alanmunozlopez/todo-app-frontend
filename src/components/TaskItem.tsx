@@ -13,6 +13,7 @@ import {
   Delete as DeleteIcon,
   Warning as WarningIcon,
 } from "@mui/icons-material";
+import { DateTime } from "luxon";
 import type { Task } from "../types/Task";
 
 interface TaskItemProps {
@@ -53,9 +54,9 @@ const getPriorityLabel = (priority: number) => {
   }
 };
 
-export default function TaskItem({ task, onDelete }: TaskItemProps) {
+export default function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return DateTime.fromISO(dateString).toLocaleString({
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -103,7 +104,11 @@ export default function TaskItem({ task, onDelete }: TaskItemProps) {
           </Box>
 
           <Box>
-            <IconButton color="primary" size="small">
+            <IconButton
+              onClick={() => onEdit(task)}
+              color="primary"
+              size="small"
+            >
               <EditIcon />
             </IconButton>
             <IconButton
