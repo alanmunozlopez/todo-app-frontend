@@ -1,47 +1,46 @@
-import { useState } from "react";
-import { Container, Box } from "@mui/material";
-import { DateTime } from "luxon";
+import { useState, useEffect, useCallback } from "react";
+import { Container, Box, Alert, Snackbar } from "@mui/material";
 import "./App.css";
 import TaskList from "./components/TaskList";
 import TaskForm from "./components/TaskForm";
+import { taskApi } from "./services/api";
 import type { Task, TaskFilter, TaskFormData } from "./types/Task";
 
-const mockTasks: Task[] = [
-  {
-    id: 1,
-    name: "Comprar pan",
-    dueDate: "2024-12-20T00:00:00Z",
-    priority: 4,
-    createdAt: "2024-12-01T10:00:00Z",
-    updatedAt: "2024-12-01T10:00:00Z",
-    isOverdue: false,
-  },
-  {
-    id: 2,
-    name: "Hacer ejercicio",
-    dueDate: "2024-11-15T00:00:00Z",
-    priority: 5,
-    createdAt: "2024-11-01T09:00:00Z",
-    updatedAt: "2024-11-01T09:00:00Z",
-    isOverdue: true,
-  },
-  {
-    id: 3,
-    name: "Hacer la cena",
-    dueDate: "2024-12-25T00:00:00Z",
-    priority: 2,
-    createdAt: "2024-12-01T14:00:00Z",
-    updatedAt: "2024-12-01T14:00:00Z",
-    isOverdue: false,
-  },
-];
-
 function App() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
+
+  const showSnackbar = (message: string, severity: "success" | "error" = "success") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const loadTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      let data: Task[];
+      
+      if (filter === "all") {
+        data = await taskApi.getAllTasks();
+      } else {
+        data = await taskApi.getTasksByType(filter);
+      }
+      
+      setTasks(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to load tasks";
+      showSnackbar(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const handleAddTask = () => {
     setEditingTask(null);
@@ -53,39 +52,41 @@ function App() {
     setFormOpen(true);
   };
 
-  const handleFormSubmit = (taskData: TaskFormData) => {
-    if (editingTask) {
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === editingTask.id
-            ? {
-                ...task,
-                name: taskData.name,
-                dueDate: DateTime.fromISO(taskData.dueDate).toISO() || taskData.dueDate,
-                priority: taskData.priority,
-                updatedAt: DateTime.now().toISO(),
-              }
-            : task
-        )
-      );
-    } else {
-      const newTask: Task = {
-        id: Math.max(...tasks.map((t) => t.id)) + 1,
-        name: taskData.name,
-        dueDate: DateTime.fromISO(taskData.dueDate).toISO() || taskData.dueDate,
-        priority: taskData.priority,
-        createdAt: DateTime.now().toISO(),
-        updatedAt: DateTime.now().toISO(),
-        isOverdue: DateTime.fromISO(taskData.dueDate) < DateTime.now(),
-      };
-      setTasks((prev) => [...prev, newTask]);
+  const handleFormSubmit = async (taskData: TaskFormData) => {
+    try {
+      setLoading(true);
+      
+      if (editingTask) {
+        await taskApi.updateTask(editingTask.id, taskData);
+        showSnackbar("Task updated successfully");
+      } else {
+        await taskApi.createTask(taskData);
+        showSnackbar("Task created successfully");
+      }
+      
+      setFormOpen(false);
+      setEditingTask(null);
+      await loadTasks();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to save task";
+      showSnackbar(errorMessage, "error");
+    } finally {
+      setLoading(false);
     }
-    setFormOpen(false);
-    setEditingTask(null);
   };
 
-  const handleDeleteTask = (id: number) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  const handleDeleteTask = async (id: number) => {
+    try {
+      setLoading(true);
+      await taskApi.deleteTask(id);
+      showSnackbar("Task deleted successfully");
+      await loadTasks();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete task";
+      showSnackbar(errorMessage, "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,6 +110,19 @@ function App() {
           onSubmit={handleFormSubmit}
           editingTask={editingTask}
         />
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Container>
   );
